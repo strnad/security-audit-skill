@@ -1,72 +1,46 @@
 # When AI Audits AI: A Supply Chain Attack That Writes Itself
 
-Today I asked an AI to security-audit an open-source AI security skill. What followed accidentally demonstrated one of the most underrated attack vectors in the AI tooling ecosystem.
+Today I asked Claude to security-audit an open-source AI security skill — a package that teaches AI agents how to find vulnerabilities in PHP code.
 
-## What happened
+The audit found a critical issue: the skill's "secure" XML parsing examples used PHP flags that actually enable XXE attacks, not prevent them. The comments in the code said the opposite of what the flags do. The skill's own checkpoints correctly flagged these flags as dangerous. It contradicted itself.
 
-I pointed Claude (Opus 4.6) at [security-audit-skill](https://github.com/netresearch/security-audit-skill) — an agent skill that teaches AI assistants how to find vulnerabilities in PHP applications. The kind of package you'd install to make your AI *better* at security.
+Claude committed an audit report to a branch in my fork. No PR was created.
 
-The audit found a critical issue: the skill's "secure" XML parsing examples used `LIBXML_NOENT` and `LIBXML_DTDLOAD` — PHP flags that **enable** XXE attacks, not prevent them. The code comments even said the opposite of what the flags actually do. And the skill's own automated checkpoints (SA-08, SA-08b) correctly flagged these same flags as dangerous. **The skill contradicted itself.**
+Within minutes, the upstream repository had a fix commit referencing my commit hash. Every finding addressed — dangerous flags removed, shell bugs fixed, regex false positives corrected.
 
-Claude committed an audit report to a branch in my fork. No PR was created. Just a commit on a branch.
+I don't know if this was a bot or a human. But the speed and 1:1 mapping to the findings are remarkable.
 
-**Within minutes**, the upstream repository had a fix commit referencing my commit hash (`strnad@dcf6e49`). Every single finding from the audit was addressed — the dangerous flags removed, a shell scripting bug fixed, regex false positives corrected, even the wording in a plugin description updated.
+Then I asked myself: What if the audit was wrong?
 
-I don't know with certainty whether this was done by a bot or a human. But the speed and the 1:1 mapping to the audit findings are remarkable either way.
+The entire chain was:
 
-## The moment it got uncomfortable
+AI writes confident report (CVSS 9.1, "CRITICAL") → upstream reads the commit → fixes applied to production within minutes
 
-The findings were correct this time. The fixes were legitimate. But then a simple question stopped me cold:
+Nobody ran PHP with those flags to verify. Nobody executed an XXE payload. The whole chain ran on statistical confidence in what PHP docs probably say.
 
-*"What if the audit was wrong?"*
+Opus 4.6 very likely got this right. But what if I had used a smaller model? A local 7B? It might have confidently written "LIBXML_NONET alone is insufficient, add LIBXML_NOENT for complete entity sanitization" — technically-sounding, well-formatted, completely wrong. And upstream would have applied it just the same.
 
-Because here's what actually happened:
+Now flip the intent:
 
-```
-I asked AI to audit a security skill
-  → AI wrote a confident report (CVSS 9.1, "CRITICAL")
-    → Someone/something on upstream read the commit
-      → Fixes were applied to production within minutes
-```
-
-Nobody ran PHP with those flags to verify. Nobody executed an XXE payload to confirm the vulnerability. The entire chain — from finding to fix — was driven by an AI's statistical confidence in what PHP documentation *probably* says.
-
-Claude Opus 4.6 very likely got this right. But what if I had used a smaller model? A local 7B? Haiku? Sonnet on a bad day?
-
-A less capable model might have confidently written: *"LIBXML_NONET alone is insufficient. Add LIBXML_NOENT for complete entity sanitization"* — technically-sounding, well-formatted, completely wrong. And the upstream would have applied it just the same.
-
-## The attack that writes itself
-
-Now flip the intent. Instead of an honest audit, imagine:
-
-1. Fork a popular AI skill repository
-2. Have any LLM generate a professional-looking security audit — proper CVSS scores, structured findings, plausible remediations
-3. Subtly reverse a recommendation: *"The current flags are insufficient. For complete XXE prevention, you must include LIBXML_NOENT to ensure entity sanitization."*
-4. Commit it to a branch. Don't even bother with a PR.
+1. Fork a popular AI skill repo
+2. Have any LLM generate a professional-looking security audit with CVSS scores
+3. Subtly reverse a recommendation
+4. Commit it. Don't even make a PR.
 5. Wait.
 
-The payload isn't code. **It's text that sounds authoritative about code.** The difference between a legitimate security audit and a poisoned one is invisible to an LLM — both have the same structure, the same confident tone, the same CVSS scores.
+The payload isn't code. It's text that sounds authoritative about code. An LLM cannot distinguish a legitimate audit from a poisoned one — both have the same structure, tone, and scores.
 
-## Why this is different from traditional supply chain attacks
+We've spent years hardening the code supply chain — signed commits, pinned deps, SLSA. But AI skills operate on a knowledge supply chain. The attack surface isn't code — it's context that shapes AI decisions. A markdown file with bad advice can be as destructive as a compromised dependency.
 
-We've spent years hardening the code supply chain — signed commits, pinned dependencies, SLSA, SBOMs. These protect against malicious *code*.
+The scariest part: you don't need a malicious actor. An honest mistake by a less capable model produces the same outcome. The vulnerability enters through confidence, not malice.
 
-But AI skills and plugins operate on a **knowledge supply chain**. The attack surface isn't the code — it's the *context* that shapes AI decisions. A markdown file with bad security advice, consumed by an AI agent, can be just as destructive as a compromised dependency.
+What to do:
 
-And the scariest part: **you don't even need a malicious actor.** An honest mistake by a less capable model produces the same outcome as a deliberate attack. The vulnerability enters through confidence, not through malice.
+- Security findings are hypotheses until you have a reproducing test case
+- Don't auto-apply fixes from external sources at machine speed
+- Human-in-the-loop means running the code, not reading the report and nodding
+- Model capability isn't just a quality difference — it's a risk difference
 
-## What to do about it
+The most dangerous vulnerability isn't in the code. It's in the gap between AI's confidence and truth — and in every system that treats that confidence as fact.
 
-- **Security findings are hypotheses, not facts.** Until you have a reproducing test case, treat them accordingly — regardless of whether a human or AI wrote them.
-- **Don't auto-apply fixes from external sources.** Not from PRs, not from forks, not from audit reports. Especially not at machine speed.
-- **The more authoritative it sounds, the more you should verify.** A CVSS 9.1 with a detailed remediation plan is exactly what a poisoned audit would look like.
-- **Human-in-the-loop means actually verifying, not just reviewing.** Reading an AI-generated report and nodding is not verification. Running the code is.
-- **Model capability matters.** If your pipeline involves AI generating or reviewing security recommendations, the difference between a frontier model and a small one isn't just quality — it's risk.
-
----
-
-The most dangerous vulnerability isn't in the code. It's in the gap between an AI's confidence and the truth — and in every downstream system that treats that confidence as fact.
-
----
-
-*Based on a real incident during a security audit of [netresearch/security-audit-skill](https://github.com/netresearch/security-audit-skill). Whether the upstream response was automated or human remains unknown. The maintainers responded swiftly and all issues are resolved.*
+Based on a real incident with netresearch/security-audit-skill.
