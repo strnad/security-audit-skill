@@ -22,8 +22,8 @@ Payload není kód. Je to text, který zní autoritativně o kódu. LLM nedoká�
 
 Dva útočné povrchy. AI skilly s chybnými patterny tiše injektují zranitelnosti do projektů, které je používají. A AI audit reporty mohou otrávit upstream, který je zpracuje bez ověření.
 
-Roky jsme zpevňovali supply chain kódu. Ale AI skilly operují na znalostním supply chainu. Markdown se špatnou radou je stejně destruktivní jako kompromitovaná závislost. A nepotřebujete útočníka. Chyba slabšího modelu má stejný výsledek.
+Roky jsme zpevňovali supply chain kódu. Ale AI skilly operují na znalostním. Markdown se špatnou radou je stejně destruktivní jako kompromitovaná závislost. A nepotřebujete útočníka. Chyba slabšího modelu má stejný výsledek.
 
-Nejnebezpečnější zranitelnost není v kódu. Je v propasti mezi sebejistotou AI a pravdou.
+Bot napsal chybu. Jiný bot ji našel. Původní bot ji opravil. Nikdo neověřil, jestli to nedopadlo hůř.
 
 Na základě reálného incidentu s netresearch/security-audit-skill.
