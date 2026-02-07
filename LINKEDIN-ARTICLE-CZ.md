@@ -8,17 +8,19 @@ Teď si představte reálný scénář. Nainstalujete si tento skill a řeknete 
 
 Ale to není všechno. Claude commitnul audit report do větve v mém forku. Žádný PR, jen commit na branchi. Během minut mělo upstream repo opravný commit referencující hash mého commitu. Každý nález adresován.
 
-Nevím, jestli to udělal bot nebo člověk. Ale pak přišla nepříjemná otázka: co kdyby se audit mýlil?
+Později se ukázalo, že opravný commit vytvořil ten samý bot, který napsal ty špatné příklady. Bot opravuje chyby bota na základě reportu jiného bota. Žádný člověk v řetězci.
+
+A pak přišla nepříjemná otázka: co kdyby se audit mýlil?
 
 Nikdo nespustil PHP s těmi flagy. Nikdo neprovedl XXE payload. Celý řetězec běžel na statistické jistotě AI v tom, co PHP dokumentace pravděpodobně říká.
 
-Opus 4.6 to měl správně. Ale co kdybych použil menší model? Lokální 7B? Ten by klidně mohl sebevědomě napsat "LIBXML_NONET samotný nestačí, přidejte LIBXML_NOENT pro kompletní sanitizaci" — zní to odborně, je to naformátované a je to špatně. A upstream by to aplikoval stejně.
+Opus 4.6 to měl správně. Ale co kdybych použil menší model? Ten by klidně mohl napsat "přidejte LIBXML_NOENT pro kompletní sanitizaci" — zní to odborně a je to špatně. A upstream by to aplikoval stejně.
 
-Teď otočte záměr. Forkněte populární AI skill repo. Nechte LLM vygenerovat profesionální audit s CVSS skóre. Nenápadně převraťte doporučení. Commitněte. Ani nedělejte PR. Počkejte.
+Teď otočte záměr. Forkněte populární AI skill repo. Nechte LLM vygenerovat profesionální audit. Nenápadně převraťte doporučení. Commitněte. Ani nedělejte PR. Počkejte.
 
-Payload není kód. Je to text, který zní autoritativně o kódu. LLM nedokáže rozlišit legitimní audit od otráveného — oba mají stejnou strukturu, tón i skóre.
+Payload není kód. Je to text, který zní autoritativně o kódu. LLM nedokáže rozlišit legitimní audit od otráveného.
 
-Dva útočné povrchy. AI skilly s chybnými patterny tiše injektují zranitelnosti do každého projektu, který je používá. A AI audit reporty mohou otrávit upstream, který je zpracuje bez ověření.
+Dva útočné povrchy. AI skilly s chybnými patterny tiše injektují zranitelnosti do projektů, které je používají. A AI audit reporty mohou otrávit upstream, který je zpracuje bez ověření.
 
 Roky jsme zpevňovali supply chain kódu. Ale AI skilly operují na znalostním supply chainu. Markdown se špatnou radou je stejně destruktivní jako kompromitovaná závislost. A nepotřebujete útočníka. Chyba slabšího modelu má stejný výsledek.
 
